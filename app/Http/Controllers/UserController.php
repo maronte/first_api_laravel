@@ -25,12 +25,13 @@ class UserController extends Controller
     {
         $user = User::whereEmail($request->email)->first();
         if ( !(is_null($user)) && Hash::check($request->password, $user->password) ){
-            $user->api_token = Str::random(100);
-            $user->save();
+            //$user->api_token = Str::random(100);
+            //$user->save();
+            $token = $user->createToken('contactos')->accessToken;
             return response([
                 'res' => true,
                 'message' => 'Bienvenido al sistema',
-                'token' => $user->api_token
+                'token' => $token
             ], 200);
         } else{
             return response([
@@ -40,11 +41,12 @@ class UserController extends Controller
         }
     }
 
-    public function logout(Request $request)
+    public function logout()
     {
         $user = auth()->user();
-        $user->api_token = null;
-        $user->save();
+        $user->tokens->each(function ($token){
+            $token->delete();
+        });
         return response([
         'res' => true,
         'message' => 'Adios'
